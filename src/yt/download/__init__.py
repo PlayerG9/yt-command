@@ -13,6 +13,7 @@ from moviepy.editor import AudioFileClip
 import tempfile
 import sys
 import os.path as path
+import re
 
 import pytube.exceptions
 from pytube import YouTube
@@ -72,25 +73,23 @@ class Downloader:
         title = self.youtube.title
         author = self.youtube.author
 
+        title = re.sub(r"\(.+\)", lambda m: "", title).strip()
+
         self.mp3path = path.abspath(fix_filename(title) + '.mp3')
 
         left, sep, right = title.partition('-')
         if not sep:  # - is not the seperator
-            print("Couldn't autodetect right title")
-            sep = input(f"Please enter the Seperator for '{title}' (None if it's the title): ")
-            if not sep:
-                self.title = title
-                self.creator = author
-                return
-            else:
-                left, sep, right = title.partition(sep)
-                if not sep:  # still failed
-                    raise NameError("failed to autodetect title")
+            left = title
+            right = author
 
         left = left.strip()
         right = right.strip()
 
-        a = int(input(f"please select title '{left}'(1) '{right}'(2) "))
+        print("(1) Title={!r:<20} Creator={!r:<20}".format(left, right))
+        print("(2) Title={!r:<20} Creator={!r:<20}".format(right, left))
+        print("(3) Manuel Input")
+
+        a = int(input("> "))
 
         if a == 1:
             self.title = left
@@ -98,8 +97,11 @@ class Downloader:
         elif a == 2:
             self.title = right
             self.creator = left
+        elif a == 3:
+            self.title = input("Title: ")
+            self.creator = input("Creator: ")
         else:
-            raise ValueError()
+            raise ValueError("invalid input")
 
     def downloadAudio(self):
         print("Searching for download")
