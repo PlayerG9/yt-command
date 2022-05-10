@@ -8,7 +8,7 @@ $ yt-command/install.sh
 ```
 and then add the following command to ~/.bash_aliases
 ```commandline
-alias yt='python3 /path/to/yt-command/src/yt'
+alias yt='/path/to/yt-command/src/yt/run.sh'
 ```
 restart the terminal and check with
 `$ yt --version` if the installation was successful
