@@ -16,6 +16,7 @@ import os.path as path
 
 import pytube.exceptions
 from pytube import YouTube
+from progressbar import ProgressBar
 
 
 def initialise(helper: 'argparse.ArgumentParser'):  # noqa
@@ -53,6 +54,8 @@ class Downloader:
         self.manipulateMetadata()
 
     def findAndValidate(self):
+        print("Searching for Video")
+
         youtube = YouTube(self.url)
 
         print("Title: ", youtube.title)
@@ -74,7 +77,7 @@ class Downloader:
         left, sep, right = title.partition('-')
         if not sep:  # - is not the seperator
             print("Couldn't autodetect right title")
-            sep = input(f"Please enter the Seperator for '{title}' (Return of it's the title): ")
+            sep = input(f"Please enter the Seperator for '{title}' (None if it's the title): ")
             if not sep:
                 self.title = title
                 self.creator = author
@@ -104,13 +107,21 @@ class Downloader:
             stream = self.youtube.streams.get_audio_only()
         except pytube.exceptions.PytubeError:
             raise RuntimeError("Failed to find audio-download")
-        print("Download with quality of", stream.bitrate, "...")
+        print("Found download with audio-quality of", stream.bitrate)
+        print("Downloading...")
         file_config = dict(
             output_path=tempfile.gettempdir(),
             filename='yt-only-audio.mp4'
         )
         self.mp4path = stream.get_file_path(**file_config)
+        pgb = ProgressBar(maxval=stream.filesize).start()
+
+        @self.youtube.register_on_progress_callback
+        def on_progress(_, __, bytes_remaining: int):
+            pgb.update(stream.filesize - bytes_remaining)
+
         stream.download(**file_config, skip_existing=False)
+        pgb.finish()
 
     def convertFileFormat(self):
         from moviepy.editor import AudioFileClip
