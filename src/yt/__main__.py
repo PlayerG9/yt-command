@@ -7,6 +7,16 @@ import argparse
 import __init__ as yt
 
 
+WELCOME_TEXT = r"""
+        _                                                      _ 
+  _   _| |_       ___ ___  _ __ ___  _ __ ___   __ _ _ __   __| |
+ | | | | __|____ / __/ _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` |
+ | |_| | ||_____| (_| (_) | | | | | | | | | | | (_| | | | | (_| |
+  \__, |\__|     \___\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|
+  |___/                                                          
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -36,4 +46,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print(WELCOME_TEXT)
     main()
