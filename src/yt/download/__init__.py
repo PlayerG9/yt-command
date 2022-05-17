@@ -2,13 +2,6 @@
 r"""
 download the mp3 part of a YouTube-Video
 
-tags: eyed3.core.Tag = eyed3.load(...).tag
-tag.title =
-tag.artist =
-tag.save()
-
-from pytube import YouTube as YouTubeVideo
-from moviepy.editor import AudioFileClip
 """
 import tempfile
 import sys
@@ -45,6 +38,11 @@ class Downloader:
     title: str
 
     def __init__(self, url: str):
+        if not url.startswith("https://"):
+            if url.startswith("/watch"):
+                url = "https://youtube.com"
+            else:
+                url = "https://youtube.com/watch?v=" + url
         self.url = url
 
     def execute(self):
