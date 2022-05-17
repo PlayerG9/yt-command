@@ -4,6 +4,8 @@ r"""
 
 """
 import argparse
+import sys
+
 import __init__ as yt
 
 
@@ -33,18 +35,25 @@ def main():
 
     import download
     download.initialise(helper=helper)
+    import search
+    search.initialise(helper)
 
     arguments = parser.parse_args()
     command = arguments.command
 
+    if command:
+        print(WELCOME_TEXT)
+    else:
+        parser.print_usage()
+        sys.exit(0)
+
     if command == 'download':
         download.execute(arguments)
     elif command == 'search':
-        pass
+        search.execute(arguments)
     else:
         raise ValueError(f"Missing or Invalid command: {command}")
 
 
 if __name__ == '__main__':
-    print(WELCOME_TEXT)
     main()
