@@ -33,6 +33,8 @@ def execute(arguments):
 class Downloader:
     mp4path: str
     mp3path: str
+    thumbnailData: bytes
+    thumbnailMimeType: str
     youtube: YouTube
     creator: str
     title: str
@@ -49,11 +51,12 @@ class Downloader:
         self.findAndValidate()
         self.collectMetadata()
         self.downloadAudio()
+        self.download_thumbnail()
         self.convertFileFormat()
         self.manipulateMetadata()
 
     def findAndValidate(self):
-        print("Searching for Video")
+        print("Searching for Video...")
 
         youtube = YouTube(self.url)
 
@@ -102,11 +105,16 @@ class Downloader:
             raise ValueError("invalid input")
 
     def downloadAudio(self):
-        print("Searching for download")
+        @self.youtube.register_on_progress_callback
+        def on_progress(_, __, bytes_remaining: int):
+            pgb.update(stream.filesize - bytes_remaining)
+
+        print("Searching for download...")
         try:
             stream = self.youtube.streams.get_audio_only()
         except pytube.exceptions.PytubeError:
             raise RuntimeError("Failed to find audio-download")
+
         print("Found download with audio-quality of", stream.bitrate)
         print("Downloading...")
         file_config = dict(
@@ -116,12 +124,15 @@ class Downloader:
         self.mp4path = stream.get_file_path(**file_config)
         pgb = ProgressBar(maxval=stream.filesize).start()
 
-        @self.youtube.register_on_progress_callback
-        def on_progress(_, __, bytes_remaining: int):
-            pgb.update(stream.filesize - bytes_remaining)
-
         stream.download(**file_config, skip_existing=False)
         pgb.finish()
+
+    def download_thumbnail(self):
+        from urllib.request import urlopen
+        import mimetypes
+
+        self.thumbnailMimeType = mimetypes.guess_type(self.youtube.thumbnail_url)[0]
+        self.thumbnailData = urlopen(self.youtube.thumbnail_url).read()
 
     def convertFileFormat(self):
         from moviepy.editor import AudioFileClip
@@ -130,11 +141,24 @@ class Downloader:
 
     def manipulateMetadata(self):
         import eyed3.mp3
+        from eyed3.id3.frames import ImageFrame
 
-        file: eyed3.core.AudioFile = eyed3.load(self.mp3path)
-        tag: eyed3.mp3.id3.Tag = file.tag
+        audiofile: eyed3.core.AudioFile = eyed3.load(self.mp3path)
+        if audiofile.tag is None:
+            audiofile.initTag()
+        tag: eyed3.mp3.id3.Tag = audiofile.tag
+
         tag.title = self.title
         tag.artist = self.creator
+
+        tag.images.set(
+            ImageFrame.FRONT_COVER,
+            self.thumbnailData,
+            self.thumbnailMimeType
+        )
+
+        # tag.lyrics.set("")
+
         tag.save()
 
 
