@@ -8,7 +8,6 @@ import sys
 
 import __init__ as yt
 
-
 WELCOME_TEXT = r"""
         _                                                      _ 
   _   _| |_       ___ ___  _ __ ___  _ __ ___   __ _ _ __   __| |
@@ -36,7 +35,7 @@ def main():
     import download
     download.initialise(helper=helper)
     import search
-    search.initialise(helper)
+    search.initialise(helper=helper)
 
     arguments = parser.parse_args()
     command = arguments.command
