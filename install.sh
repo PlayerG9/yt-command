@@ -37,7 +37,7 @@ else
 fi
 
 # add bash completion (gets always replaced)
-COMPLETION_DIRECTORY="$HOME/.bash_completion.d/"
+COMPLETION_DIRECTORY="$HOME/.bash_completion.d"
 if [[ ! -d "$COMPLETION_DIRECTORY" ]]; then
   echo "Created '$COMPLETION_DIRECTORY' because it didn't exists"
   mkdir "$COMPLETION_DIRECTORY"
@@ -48,7 +48,6 @@ COMPLETION_FILE="$COMPLETION_DIRECTORY/yt-completion.bash"
 echo '#!/usr/bin/env bash
 complete -W "--help download search" yt
 ' >> "$COMPLETION_FILE"
-echo "Restart terminal to update yt command completion"
 
 RUN_COMPLETION_COMMAND="source \"$COMPLETION_FILE\""
 "$RUN_COMPLETION_COMMAND"  # run once to update
