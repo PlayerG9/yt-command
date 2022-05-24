@@ -7,8 +7,8 @@ cd "$(dirname "$0")" || exit 1
 python3 -m venv .venv || exit 1
 
 # install required libraries
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r ./requirements.txt
+.venv/bin/pip -q install --upgrade pip
+.venv/bin/pip -q install -r ./requirements.txt
 
 echo
 echo "Virtual environment was created/updated"
@@ -50,7 +50,7 @@ complete -W "--help download search" yt
 ' >> "$COMPLETION_FILE"
 
 RUN_COMPLETION_COMMAND="source \"$COMPLETION_FILE\""
-"$RUN_COMPLETION_COMMAND"  # run once to update
+eval "$RUN_COMPLETION_COMMAND"  # run once to update
 if ! grep -Fxq "$RUN_COMPLETION_COMMAND" "$BASHRC_FILE"; then
   echo "$RUN_COMPLETION_COMMAND" >> "$BASHRC_FILE"
 fi
