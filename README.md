@@ -12,12 +12,17 @@ command tool to search for YouTube videos and to download them
 
 # how to install
 ```commandline
+$ cd path/to/directory/you/like
 $ git clone https://github.com/PlayerG9/yt-command.git
 $ yt-command/install.sh
 ```
-and then add the following command to ~/.bash_aliases
-```commandline
-alias yt='/path/to/yt-command/src/yt/run.sh'
-```
-restart the terminal and check with
-`$ yt --version` if the installation was successful
+run `yt --version` to test if the installation was successful
+
+## what does the installation do?
+- create a python-virtual-environment and install required packages
+  - dir: `/path/to/yt-command/.venv/*`
+- create an alias
+  - line: `alias yt="/path/to/yt-command/sry/yt/run.sh` to `~/.bash_aliases`
+- add bash-completion
+  - file: `~/bash_completion.d/yt-completion.bash`
+  - line: `source "~/bash_completion.d/yt-completion.bash"` to `~/.bashrc`
