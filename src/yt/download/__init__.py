@@ -130,6 +130,8 @@ class Downloader:
 
     def fetchLyrics(self):
         response = requests.get(f"https://api.lyrics.ovh/v1/{self.creator}/{self.title}")
+        if response.status_code == 404:
+            raise HTTP404NotFound()  # custom error
         response.raise_for_status()
         data: dict = response.json()
 
@@ -169,6 +171,8 @@ class Downloader:
         try:
             print("Fetching Lyrics...")
             lyrics: str = self.fetchLyrics()
+        except HTTP404NotFound:
+            print("Lyrics no found")
         except (requests.Timeout, requests.HTTPError) as error:
             print("Failed to fetch lyrics")
             print(f"({error.__class__.__name__}: {error})")
@@ -213,3 +217,7 @@ def complete_url(known: str) -> str:
         return f"https://youtube.com/watch?{known}"
     else:
         return f"https://youtube.com/watch?v={known}"
+
+
+class HTTP404NotFound(requests.HTTPError):
+    pass
