@@ -159,13 +159,12 @@ class Downloader:
             print("Failed to fetch thumbnail")
             print(f"({error.__class__.__name__}: {error})")
         else:
-            # maybe only FRONT_COVER
-            for keyId in [ImageFrame.ICON, ImageFrame.FRONT_COVER]:
-                tag.images.set(
-                    keyId,
-                    blob,
-                    mimetype
-                )
+            # for keyId in [ImageFrame.ICON, ImageFrame.FRONT_COVER]:
+            tag.images.set(
+                ImageFrame.FRONT_COVER,
+                blob,
+                mimetype
+            )
 
         try:
             print("Fetching Lyrics...")
