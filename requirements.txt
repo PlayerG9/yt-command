@@ -1,5 +1,6 @@
 pytube
 moviepy
 eyeD3
-progressbar
 youtube-search-python
+progressbar
+requests
