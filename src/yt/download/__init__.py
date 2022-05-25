@@ -11,6 +11,7 @@ import re
 import pytube.exceptions
 from pytube import YouTube
 from progressbar import ProgressBar
+import requests
 
 
 def initialise(helper: 'argparse.ArgumentParser'):  # noqa
@@ -33,25 +34,17 @@ def execute(arguments):
 class Downloader:
     mp4path: str
     mp3path: str
-    thumbnailData: bytes
-    thumbnailMimeType: str
     youtube: YouTube
     creator: str
     title: str
 
     def __init__(self, url: str):
-        if not url.startswith("https://"):
-            if url.startswith("/watch"):
-                url = "https://youtube.com"
-            else:
-                url = "https://youtube.com/watch?v=" + url
-        self.url = url
+        self.url = complete_url(url)
 
     def execute(self):
         self.findAndValidate()
         self.collectMetadata()
         self.downloadAudio()
-        self.download_thumbnail()
         self.convertFileFormat()
         self.manipulateMetadata()
 
@@ -74,20 +67,20 @@ class Downloader:
         title = self.youtube.title
         author = self.youtube.author
 
-        title = re.sub(r"\(.+\)", lambda m: "", title).strip()
+        title = removeBrackets(title)
 
-        self.mp3path = path.abspath(fix_filename(title) + '.mp3')
+        self.mp3path = path.abspath(fix4filename(title) + '.mp3')
 
         left, sep, right = title.partition('-')
         if not sep:  # - is not the seperator
             left = title
             right = author
 
-        left = left.strip()
-        right = right.strip()
+        left = removeNonUnicode(left)
+        right = removeNonUnicode(right)
 
-        print("(1) Title={!r:<20} Creator={!r:<20}".format(left, right))
-        print("(2) Title={!r:<20} Creator={!r:<20}".format(right, left))
+        print("(1) Title={!r:<25} Creator={!r:<20}".format(left, right))
+        print("(2) Title={!r:<25} Creator={!r:<20}".format(right, left))
         print("(3) Manuel Input")
 
         a = int(input("> "))
@@ -123,16 +116,24 @@ class Downloader:
         )
         self.mp4path = stream.get_file_path(**file_config)
         pgb = ProgressBar(maxval=stream.filesize).start()
-
         stream.download(**file_config, skip_existing=False)
         pgb.finish()
 
-    def download_thumbnail(self):
-        from urllib.request import urlopen
+    def download_thumbnail(self) -> (bytes, str):
         import mimetypes
 
-        self.thumbnailMimeType = mimetypes.guess_type(self.youtube.thumbnail_url)[0]
-        self.thumbnailData = urlopen(self.youtube.thumbnail_url).read()
+        mimetype: str = mimetypes.guess_type(self.youtube.thumbnail_url)[0]
+        response = requests.get(self.youtube.thumbnail_url)
+        response.raise_for_status()
+
+        return response.content, mimetype
+
+    def fetchLyrics(self):
+        response = requests.get(f"https://api.lyrics.ovh/v1/{self.creator}/{self.title}")
+        response.raise_for_status()
+        data: dict = response.json()
+
+        return data.get('lyrics')
 
     def convertFileFormat(self):
         from moviepy.editor import AudioFileClip
@@ -151,17 +152,65 @@ class Downloader:
         tag.title = self.title
         tag.artist = self.creator
 
-        tag.images.set(
-            ImageFrame.FRONT_COVER,
-            self.thumbnailData,
-            self.thumbnailMimeType
-        )
+        try:
+            print("Fetching Thumbnail...")
+            blob, mimetype = self.download_thumbnail()
+        except (requests.Timeout, requests.HTTPError) as error:
+            print("Failed to fetch thumbnail")
+            print(f"({error.__class__.__name__}: {error})")
+        else:
+            # maybe only FRONT_COVER
+            for keyId in [ImageFrame.ICON, ImageFrame.FRONT_COVER]:
+                tag.images.set(
+                    keyId,
+                    blob,
+                    mimetype
+                )
 
-        # tag.lyrics.set("")
+        try:
+            print("Fetching Lyrics...")
+            lyrics: str = self.fetchLyrics()
+        except (requests.Timeout, requests.HTTPError) as error:
+            print("Failed to fetch lyrics")
+            print(f"({error.__class__.__name__}: {error})")
+        else:
+            tag.lyrics.set(lyrics)
 
-        tag.save()
+        try:
+            print("Updating metadata...")
+            tag.save()
+        except eyed3.Error:
+            print("Failed to update metadata")
 
 
-def fix_filename(filename: str) -> str:
-    import re
-    return re.sub(r'[^\w\-_. ()]', '_', filename)
+def fix4filename(filename: str) -> str:
+    filename = re.sub(r'[^\w\-.()]', '_', filename).strip()
+    while '__' in filename:
+        filename = filename.replace('__', '_')
+    return filename
+
+
+def removeBrackets(string: str) -> str:
+    return re.sub(r"\(.+\)", lambda m: "", string).strip()  # remove everything within brackets
+
+
+def removeNonUnicode(string: str) -> str:
+    return re.sub(r'[^\w\- ]', '', string).strip()  # remove non-word-characters
+
+
+def complete_url(known: str) -> str:
+    r"""
+    allowed formats
+    {ID}
+    v={ID}
+    /watch?v={ID}
+    https://youtube.com/watch?v={ID}
+    """
+    if known.startswith("https://"):
+        return f"{known}"
+    elif known.startswith("/watch?v="):
+        return f"https://youtube.com{known}"
+    elif known.startswith("v="):
+        return f"https://youtube.com/watch?{known}"
+    else:
+        return f"https://youtube.com/watch?v={known}"
