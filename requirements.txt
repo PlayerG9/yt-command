@@ -1,6 +1,14 @@
+# generell
+requests
+progressbar
+
+# yt download
 pytube
 moviepy
 eyeD3
+
+# download.lyricfinder
+beautifulsoup4
+
+# yt search
 youtube-search-python
-progressbar
-requests
