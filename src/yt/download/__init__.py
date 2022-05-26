@@ -197,7 +197,7 @@ def removeBrackets(string: str) -> str:
 
 
 def removeNonUnicode(string: str) -> str:
-    return re.sub(r'[^\w\- ]', '', string).strip()  # remove non-word-characters
+    return re.sub(r'[^\w\- \'!?]', '', string).strip()  # remove non-word-characters
 
 
 def complete_url(known: str) -> str:
