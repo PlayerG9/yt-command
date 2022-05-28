@@ -13,7 +13,7 @@ from pytube import YouTube
 from progressbar import ProgressBar
 import requests
 
-from .lyricfinder import find_lyrics
+from .lyricfetcher import find_lyrics
 
 
 def initialise(helper: 'argparse.ArgumentParser'):  # noqa
