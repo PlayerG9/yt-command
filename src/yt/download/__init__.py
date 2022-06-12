@@ -13,7 +13,7 @@ from pytube import YouTube
 from progressbar import ProgressBar
 import requests
 
-from .lyricfetcher import find_lyrics
+from .lyricfetcher import find_lyrics, LyricsNotFound
 
 
 def initialise(helper: 'argparse.ArgumentParser'):  # noqa
@@ -155,8 +155,8 @@ class Downloader:
         tag.title = self.title
         tag.artist = self.creator
 
+        print("Fetching Thumbnail...")
         try:
-            print("Fetching Thumbnail...")
             blob, mimetype = self.download_thumbnail()
         except (requests.Timeout, requests.HTTPError) as error:
             print("Failed to fetch thumbnail")
@@ -169,17 +169,17 @@ class Downloader:
                 mimetype
             )
 
+        print("Fetching Lyrics...")
         try:
-            print("Fetching Lyrics...")
             lyrics: str = find_lyrics(self.title, self.creator)
-        except (requests.Timeout, requests.HTTPError) as error:
+        except (requests.Timeout, requests.HTTPError, LyricsNotFound) as error:
             print("Failed to fetch lyrics")
             print(f"({error.__class__.__name__}: {error})")
         else:
             tag.lyrics.set(lyrics)
 
+        print("Updating metadata...")
         try:
-            print("Updating metadata...")
             tag.save()
         except eyed3.Error:
             print("Failed to update metadata")
