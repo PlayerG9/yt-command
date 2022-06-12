@@ -110,7 +110,7 @@ class Downloader:
         except pytube.exceptions.PytubeError:
             raise RuntimeError("Failed to find audio-download")
 
-        print("Found download with audio-quality of", stream.bitrate)
+        print(f"Found download with audio-quality of {stream.bitrate // 1000}k")
         print("Downloading...")
         file_config = dict(
             output_path=tempfile.gettempdir(),
@@ -130,18 +130,13 @@ class Downloader:
 
         return response.content, mimetype
 
-    # old version (is very slow)
-    # def fetchLyrics(self):
-    #     response = requests.get(f"https://api.lyrics.ovh/v1/{self.creator}/{self.title}")
-    #     response.raise_for_status()
-    #     data: dict = response.json()
-    #
-    #     return data.get('lyrics')
-
     def convertFileFormat(self):
         from moviepy.editor import AudioFileClip
 
-        AudioFileClip(self.mp4path).write_audiofile(self.mp3path)
+        clip = AudioFileClip(self.mp4path)
+        # verbose = info & logger = progress-bar
+        # clip.write_audiofile(self.mp3path, verbose=False, logger=None)
+        clip.write_audiofile(self.mp3path, verbose=False)
 
     def manipulateMetadata(self):
         import eyed3.mp3
