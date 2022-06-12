@@ -35,12 +35,12 @@ def search_for_lyrics(title: str, creator: str) -> str:
 
     # search can fail without status-code of 404 (still 200)
     if table is None:
-        raise LyricsNotFound()
+        raise LyricsNotFound("just not found")
 
     lyrics_url = table.find("a").get('href')
 
     if not lyrics_url or not lyrics_url.startswith(provider):
-        raise LyricsNotFound()
+        raise LyricsNotFound("something went wrong in the search")
 
     return lyrics_url
 
@@ -53,7 +53,7 @@ def fetch_lyrics(url: str) -> str:
 
     element = soup.find(text=find_lyrics_container).parent
     if not element:
-        raise LookupError()
+        raise LookupError("failed to extract the lyrics")
 
     # don't use string with += because that's worse (and slower)
     lyrics_lines = []
