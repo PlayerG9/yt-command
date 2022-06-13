@@ -4,6 +4,8 @@ r"""
 maybe utilize the search function for better results
 the current way of creating the url is not perfect
 """
+import logging
+
 import requests
 from bs4 import BeautifulSoup
 from bs4 import element as html_elements
@@ -14,7 +16,9 @@ class LyricsNotFound(LookupError):
 
 
 def find_lyrics(title: str, creator: str) -> str:
+    logging.debug(f"starting search for lyrics ({creator}: {title})")
     url = search_for_lyrics(title, creator)
+    logging.debug(f"found lyrics url ({url})")
     return fetch_lyrics(url)
 
 
@@ -25,9 +29,11 @@ def search_for_lyrics(title: str, creator: str) -> str:
 
     query = f"{creator} {title}"
     url = f"{provider}/search.php?w=songs&p=1&q=" + quote_plus(query)
+    logging.debug(f"query url generated ({url})")
 
     response = requests.get(url)
     response.raise_for_status()
+    logging.debug("request successful")
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -54,6 +60,7 @@ def fetch_lyrics(url: str) -> str:
     element = soup.find(text=find_lyrics_container).parent
     if not element:
         raise LookupError("failed to extract the lyrics")
+    logging.debug("lyrics container found")
 
     # don't use string with += because that's worse (and slower)
     lyrics_lines = []
@@ -69,15 +76,10 @@ def fetch_lyrics(url: str) -> str:
 
 
 def find_lyrics_container(text):
-    # There is a comment paralel to the lyrics with the following content:
+    # There is a comment parallel to the lyrics with the following content:
     # Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. ...
     # shortened 'third-party' is sufficient to check
     return isinstance(text, html_elements.Comment) and 'third-party' in text
-
-
-def fix_url_param(string: str) -> str:
-    import re
-    return re.sub(r'\W', "", string.lower())  # remove spaces and make lowercase
 
 
 if __name__ == '__main__':

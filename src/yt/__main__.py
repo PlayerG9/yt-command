@@ -4,6 +4,7 @@ r"""
 
 """
 import argparse
+import logging
 import sys
 
 import __init__ as yt
@@ -18,13 +19,35 @@ WELCOME_TEXT = r"""
 """
 
 
+def configure_logging(arguments):
+
+    if arguments.verbose:
+        level = logging.DEBUG
+    elif arguments.quiet:
+        level = logging.WARNING
+    else:
+        level = logging.DEBUG if __debug__ else logging.INFO
+
+    logging.basicConfig(
+        datefmt="%H:%M:%S",
+        style='{',
+        format="{asctime}|{message}",
+        level=level,
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         add_help=True
     )
 
-    parser.add_argument('--version', version=yt.__version__, action="version")
+    parser.add_argument('-V', '--version', version=yt.__version__, action="version")
+    parser.add_argument('-v', '--verbose', action='store_true', required=False, help="produce more output")
+    parser.add_argument('-q', '--quiet', action='store_true', required=False, help="produce less output")
 
     helper = parser.add_subparsers(  # create helper for new sup-commands
         title="command",
@@ -38,14 +61,15 @@ def main():
     search.initialise(helper=helper)
 
     arguments = parser.parse_args()
+    configure_logging(arguments)
     command = arguments.command
 
-    if command:
+    if not command:
         print(WELCOME_TEXT)
-    else:
         parser.print_usage()
         sys.exit(0)
 
+    logging.debug(f"execute command: {command:r}")
     if command == 'download':
         download.execute(arguments)
     elif command == 'search':
