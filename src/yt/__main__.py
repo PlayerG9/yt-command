@@ -69,13 +69,13 @@ def main():
         parser.print_usage()
         sys.exit(0)
 
-    logging.debug(f"execute command: {command:r}")
+    logging.debug(f"execute command: {command!r}")
     if command == 'download':
         download.execute(arguments)
     elif command == 'search':
         search.execute(arguments)
     else:
-        raise ValueError(f"Missing or Invalid command: {command}")
+        raise ValueError(f"Missing or Invalid command: {command!r}")
 
 
 if __name__ == '__main__':
