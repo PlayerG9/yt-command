@@ -25,13 +25,6 @@ if [[ -f "$ALIAS_FILE" ]]; then
   else
     echo "$ALIAS_COMMAND" >> "$ALIAS_FILE"
   fi
-#elif [[ -f "$BASHRC_FILE" ]]; then
-#  # check if the command already exists in the file
-#  if grep -Fxq "$ALIAS_COMMAND" "$BASHRC_FILE"; then
-#    echo "alias already exists"
-#  else
-#    echo "$ALIAS_COMMAND" >> "$BASHRC_FILE"
-#  fi
 else
   echo "Failed to create 'yt'-alias"
 fi
@@ -43,11 +36,10 @@ if [[ ! -d "$COMPLETION_DIRECTORY" ]]; then
   mkdir "$COMPLETION_DIRECTORY"
 fi
 
-COMPLETION_FILE="$COMPLETION_DIRECTORY/yt-completion.bash"
-: > "$COMPLETION_FILE" # empty or create the file
-echo '#!/usr/bin/env bash
-complete -W "--help download search" yt
-' >> "$COMPLETION_FILE"
+# copy completion file (maybe replace with cp command)
+COMPLETION_FILENAME="yt-completion.bash"
+COMPLETION_FILE="$COMPLETION_DIRECTORY/$COMPLETION_FILENAME"
+cat "$(dirname "$0")/scripts/$COMPLETION_FILENAME" > "$COMPLETION_FILE"
 
 RUN_COMPLETION_COMMAND="source \"$COMPLETION_FILE\""
 eval "$RUN_COMPLETION_COMMAND"  # run once to update

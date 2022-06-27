@@ -59,6 +59,8 @@ def main():
     download.initialise(helper=helper)
     import search
     search.initialise(helper=helper)
+    import open as cmd_open  # don't override the default open()
+    cmd_open.initialise(helper=helper)
 
     arguments = parser.parse_args()
     configure_logging(arguments)
@@ -74,6 +76,8 @@ def main():
         download.execute(arguments)
     elif command == 'search':
         search.execute(arguments)
+    elif command == 'open':
+        cmd_open.execute(arguments)
     else:
         raise ValueError(f"Missing or Invalid command: {command!r}")
 
