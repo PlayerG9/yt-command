@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 r"""
 search for videos
+
+only lists videos between 1min and 6min.
+if you need longer or shorter videos, then use the --longer or --shorter arguments
 """
 import youtubesearchpython
 
