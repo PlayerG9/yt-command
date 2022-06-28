@@ -20,7 +20,7 @@ def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
         description=__doc__  # long help in command-help
     )
 
-    parser.add_argument('--window', '-w')
+    parser.add_argument('-w', '--window')
 
     commands[COMMAND_NAME] = execute
 
