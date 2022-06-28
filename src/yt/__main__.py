@@ -55,31 +55,30 @@ def main():
         help='available commands'
     )
 
+    command_index = dict()
+
     import download
-    download.initialise(helper=helper)
+    download.initialise(helper=helper, commands=command_index)
     import search
-    search.initialise(helper=helper)
+    search.initialise(helper=helper, commands=command_index)
     import open as cmd_open  # don't override the default open()
-    cmd_open.initialise(helper=helper)
+    cmd_open.initialise(helper=helper, commands=command_index)
 
     arguments = parser.parse_args()
     configure_logging(arguments)
-    command = arguments.command
+    command_name = arguments.command
 
-    if not command:
+    if not command_name:
         print(WELCOME_TEXT)
         parser.print_usage()
         sys.exit(0)
 
-    logging.debug(f"execute command: {command!r}")
-    if command == 'download':
-        download.execute(arguments)
-    elif command == 'search':
-        search.execute(arguments)
-    elif command == 'open':
-        cmd_open.execute(arguments)
+    logging.debug(f"execute command: {command_name!r}")
+    command = command_index.get(command_name)
+    if command:
+        command(arguments)
     else:
-        raise ValueError(f"Missing or Invalid command: {command!r}")
+        raise ValueError(f"Missing or Invalid command: {command_name!r}")
 
 
 if __name__ == '__main__':

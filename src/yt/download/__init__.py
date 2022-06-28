@@ -22,17 +22,22 @@ import requests
 from .lyricfetcher import find_lyrics, LyricsNotFound
 
 
-def initialise(helper: 'argparse.ArgumentParser'):  # noqa
+COMMAND_NAME = "download"
+
+
+def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
     import argparse
 
     parser: argparse.ArgumentParser = helper.add_parser(
-        "download",
+        COMMAND_NAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         help=__doc__.split('\n', 1)[0],  # short help in main-help
         description=__doc__  # long help in command-help
     )
 
     parser.add_argument('url')
+
+    commands[COMMAND_NAME] = execute
 
 
 def execute(arguments):

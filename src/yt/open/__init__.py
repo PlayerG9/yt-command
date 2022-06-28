@@ -6,16 +6,27 @@ starts your default browser with youtube
 import webbrowser
 
 
-def initialise(helper: 'argparse.ArgumentParser'):  # noqa
+COMMAND_NAME = "open"
+URL_TO_OPEN = 'https://www.youtube.com/'
+
+
+def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
     import argparse
 
     parser: argparse.ArgumentParser = helper.add_parser(
-        "open",
+        COMMAND_NAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         help=__doc__.split('\n', 1)[0],  # short help in main-help
         description=__doc__  # long help in command-help
     )
 
+    parser.add_argument('--window', '-w')
 
-def execute(_):
-    webbrowser.open('https://www.youtube.com/', autoraise=True)
+    commands[COMMAND_NAME] = execute
+
+
+def execute(arguments):
+    if arguments.window:
+        webbrowser.open_new_tab(URL_TO_OPEN)
+    else:
+        webbrowser.open_new(URL_TO_OPEN)
