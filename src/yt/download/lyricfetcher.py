@@ -75,7 +75,7 @@ def fetch_lyrics(url: str) -> str:
     return ''.join(lyrics_lines).strip()
 
 
-def find_lyrics_container(text):
+def find_lyrics_container(text) -> bool:
     # There is a comment parallel to the lyrics with the following content:
     # Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. ...
     # shortened 'third-party' is sufficient to check

@@ -7,6 +7,8 @@ yt search "Last one standing"
 only lists videos between 1min and 6min.
 if you need longer or shorter videos, then use the --longer or --shorter arguments
 """
+import traceback
+
 import youtubesearchpython
 import logging
 import shutil
@@ -18,11 +20,13 @@ COMMAND_NAME = "search"
 def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
     import argparse
 
+    short, description = __doc__.strip().split('\n', 1)
+
     parser: argparse.ArgumentParser = helper.add_parser(
         COMMAND_NAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        help=__doc__.split('\n', 1)[0],  # short help in main-help
-        description=__doc__  # long help in command-help
+        help=short,  # short help in main-help
+        description=description  # long help in command-help
     )
 
     parser.add_argument('query')
@@ -37,21 +41,28 @@ def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
 
 
 def execute(arguments):
-    Searcher(query=arguments.query, config=arguments).execute()
+    Searcher(args=arguments).execute()
 
 
 class Searcher:
     search: youtubesearchpython.CustomSearch
 
-    def __init__(self, query: str, config):
-        self.query = query
-        self.config = config
+    def __init__(self, args):
+        self.query = self.createQuery(args)
+        self.config = args
 
-    def execute(self):
+    def execute(self) -> None:
         self.createSearcher()
         self.printSearchResults()
 
-    def createSearcher(self):
+    @staticmethod
+    def createQuery(args) -> str:
+        if args.channel:
+            return f"{args.channel} {args.query}"
+        else:
+            return f"{args.query}"
+
+    def createSearcher(self) -> None:
         from youtubesearchpython import CustomSearch, SearchMode, VideoDurationFilter, VideoSortOrder
         self.search = CustomSearch(
             query=self.query,
@@ -59,8 +70,9 @@ class Searcher:
             limit=self.config.limit,
             timeout=30
         )
+        logging.debug(f"URL: {self.search.url}")
 
-    def printSearchResults(self):
+    def printSearchResults(self) -> None:
         result = self.search.result()
         terminal_width = shutil.get_terminal_size()[0]
 
@@ -75,6 +87,8 @@ class Searcher:
             except KeyError as error:
                 logging.warning("failed to evaluate one result element")
                 logging.warning(f"({error.__class__.__name__}: {error})")
+                if self.config.debug:
+                    traceback.print_exception(None, error, error.__traceback__)
                 continue
             else:
                 print(f" {title} ".center(terminal_width, "="))

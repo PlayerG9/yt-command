@@ -19,7 +19,7 @@ WELCOME_TEXT = r"""
 """
 
 
-def configure_logging(arguments):
+def configure_logging(arguments) -> None:
 
     if arguments.verbose:
         level = logging.DEBUG
@@ -39,21 +39,38 @@ def configure_logging(arguments):
     )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        add_help=True
-    )
+        add_help=True)
+    parser.usage = WELCOME_TEXT
 
-    parser.add_argument('-V', '--version', version=yt.__version__, action="version")
-    parser.add_argument('-v', '--verbose', action='store_true', required=False, help="produce more output")
-    parser.add_argument('-q', '--quiet', action='store_true', required=False, help="produce less output")
+    parser.add_argument(
+        '-V', '--version',
+        version=yt.__version__,
+        action="version")
+    # parser.add_argument(
+    #     '-v', '--verbose',
+    #     action='store_true',
+    #     required=False,
+    #     help="produce more output")
+    # parser.add_argument(
+    #     '-q', '--quiet',
+    #     action='store_true',
+    #     required=False,
+    #     help="produce less output")
+    parser.add_argument(
+        '-D', '--debug',
+        action='store_true',
+        required=False,
+        default=__debug__,
+        help="print more on errors")
 
-    helper = parser.add_subparsers(  # create helper for new sup-commands
+    # create helper for new sup-commands
+    helper = parser.add_subparsers(
         title="command",
         dest="command",
-        help='available commands'
-    )
+        help='available commands')
 
     command_index = dict()
 

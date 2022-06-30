@@ -8,6 +8,7 @@ produces mp3-file including
 - lyrics
 """
 import logging
+import traceback
 import tempfile
 import sys
 import os
@@ -28,11 +29,13 @@ COMMAND_NAME = "download"
 def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
     import argparse
 
+    short, description = __doc__.strip().split('\n', 1)
+
     parser: argparse.ArgumentParser = helper.add_parser(
         COMMAND_NAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        help=__doc__.split('\n', 1)[0],  # short help in main-help
-        description=__doc__  # long help in command-help
+        help=short,  # short help in main-help
+        description=description  # long help in command-help
     )
 
     parser.add_argument('url')
@@ -41,7 +44,7 @@ def initialise(helper: 'argparse.ArgumentParser', commands: dict):  # noqa
 
 
 def execute(arguments):
-    Downloader(url=arguments.url).execute()
+    Downloader(url=arguments.url, args=arguments).execute()
 
 
 class Downloader:
@@ -51,10 +54,11 @@ class Downloader:
     creator: str
     title: str
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, args):
         self.url = complete_url(url)
+        self.config = args
 
-    def execute(self):
+    def execute(self) -> None:
         try:
             self.findAndValidate()
             self.collectMetadata()
@@ -67,7 +71,7 @@ class Downloader:
                 os.remove(mp3path)
             raise exception
 
-    def findAndValidate(self):
+    def findAndValidate(self) -> None:
         logging.info("Searching for Video...")
 
         youtube = YouTube(self.url)
@@ -77,12 +81,12 @@ class Downloader:
         print("Views: ", "{:,}".format(youtube.views))
         print("Length:", f"{youtube.length // 60}:{youtube.length % 60}")
 
-        if input("Proceed? (y) ") != 'y':
+        if input("Proceed? (y) ").lower() != 'y':
             sys.exit(0)
 
         self.youtube = youtube
 
-    def collectMetadata(self):
+    def collectMetadata(self) -> None:
         title = self.youtube.title
         author = self.youtube.author
 
@@ -104,7 +108,7 @@ class Downloader:
             try:
                 a = int(input("> "))
             except ValueError:
-                pass
+                logging.warning("invalid input")
             else:
                 break
 
@@ -123,7 +127,7 @@ class Downloader:
         self.mp3path = path.abspath(fix4filename(f"{self.creator}_{self.title}") + '.mp3')
         logging.debug(f"mp3 path generated ({self.mp3path}")
 
-    def downloadAudio(self):
+    def downloadAudio(self) -> None:
         @self.youtube.register_on_progress_callback
         def on_progress(_, __, bytes_remaining: int):
             pgb.update(stream.filesize - bytes_remaining)
@@ -157,7 +161,7 @@ class Downloader:
 
         return response.content, mimetype
 
-    def convertFileFormat(self):
+    def convertFileFormat(self) -> None:
         from moviepy.editor import AudioFileClip
 
         logging.debug("loading mp4-file")
@@ -167,7 +171,7 @@ class Downloader:
         logging.info("writing mp3-file")
         clip.write_audiofile(self.mp3path, verbose=False)
 
-    def manipulateMetadata(self):
+    def manipulateMetadata(self) -> None:
         import eyed3.mp3
         from eyed3.id3.frames import ImageFrame
 
@@ -185,6 +189,8 @@ class Downloader:
         except (requests.Timeout, requests.HTTPError) as error:
             logging.warning("Failed to fetch thumbnail")
             logging.warning(f"({error.__class__.__name__}: {error})")
+            if self.config.debug:
+                traceback.print_exception(None, error, error.__traceback__)
         else:
             # for keyId in [ImageFrame.ICON, ImageFrame.FRONT_COVER]:
             tag.images.set(
@@ -199,6 +205,8 @@ class Downloader:
         except (requests.Timeout, requests.HTTPError, LyricsNotFound) as error:
             logging.warning("Failed to fetch lyrics")
             logging.warning(f"({error.__class__.__name__}: {error})")
+            if self.config.debug:
+                traceback.print_exception(None, error, error.__traceback__)
         else:
             tag.lyrics.set(lyrics)
 
