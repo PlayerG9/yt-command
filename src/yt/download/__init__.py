@@ -225,7 +225,7 @@ def fix4filename(filename: str) -> str:
 
 
 def removeBrackets(string: str) -> str:
-    return re.sub(r"[(\[].+[)\]]", lambda m: "", string).strip()  # remove everything within brackets
+    return re.sub(r"\(.+\)|\[.+]", lambda m: "", string).strip()  # remove everything within brackets
 
 
 def removeNonUnicode(string: str) -> str:
