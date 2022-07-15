@@ -49,16 +49,16 @@ def main() -> None:
         '-V', '--version',
         version=yt.__version__,
         action="version")
-    # parser.add_argument(
-    #     '-v', '--verbose',
-    #     action='store_true',
-    #     required=False,
-    #     help="produce more output")
-    # parser.add_argument(
-    #     '-q', '--quiet',
-    #     action='store_true',
-    #     required=False,
-    #     help="produce less output")
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        required=False,
+        help="produce more output")
+    parser.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        required=False,
+        help="produce less output")
     parser.add_argument(
         '-D', '--debug',
         action='store_true',
